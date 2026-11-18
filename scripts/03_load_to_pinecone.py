@@ -40,7 +40,7 @@ def load_to_pinecone():
         print("Помилка: кількість статей і векторів не збігається.")
         return
 
-    if embeddings.shape[1] != DIMENSION:
+    if embeddings.ndim != 2 or embeddings.shape[1] != DIMENSION:
         print("Помилка: неправильна розмірність ембеддингів.")
         return
 
@@ -84,17 +84,20 @@ def load_to_pinecone():
         for i in range(start, min(start + BATCH_SIZE, len(df))):
             row = df.iloc[i]
 
+            arxiv_id = str(row["id"])
+
             metadata = {
+                "arxiv_id": arxiv_id,
                 "title": str(row["title"]),
-                "abstract": str(row["abstract"]),
-                "authors": str(row["authors"]),
+                "abstract": str(row["abstract"])[:500],
+                "authors": str(row["authors"])[:200],
                 "year": int(row["year"]),
                 "category": str(row["category"]),
             }
 
             batch.append(
                 {
-                    "id": str(row["id"]),
+                    "id": arxiv_id,
                     "values": embeddings[i].tolist(),
                     "metadata": metadata,
                 }
@@ -105,7 +108,11 @@ def load_to_pinecone():
     print("\nЗавантаження завершено!")
 
     stats = index.describe_index_stats()
-    print(f"Кількість векторів у Pinecone: {stats.total_vector_count}")
+
+    print(
+        f"Кількість векторів у Pinecone: "
+        f"{stats.total_vector_count}"
+    )
 
 
 if __name__ == "__main__":

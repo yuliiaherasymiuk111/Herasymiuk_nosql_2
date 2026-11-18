@@ -71,14 +71,26 @@ def semantic_search(
     top_k=5,
     year=None,
     category=None,
+    year_before=None,
+    year_from=None,
 ):
-    """Шукаю наукові статті за змістом."""
+    """Шукаю наукові статті за змістом із фільтрами."""
     vector = create_query_embedding(query, tokenizer, model)
 
     filters = {}
 
     if year is not None:
         filters["year"] = {"$eq": int(year)}
+    elif year_before is not None or year_from is not None:
+        year_filter = {}
+
+        if year_before is not None:
+            year_filter["$lt"] = int(year_before)
+
+        if year_from is not None:
+            year_filter["$gte"] = int(year_from)
+
+        filters["year"] = year_filter
 
     if category:
         filters["category"] = {"$eq": category}
@@ -128,18 +140,20 @@ def main():
 
     tokenizer, model = load_model()
 
-    # Пошук без фільтрів
+    query = "machine learning methods for image classification"
+
+    # 1. Пошук без фільтрів
     semantic_search(
-        query="machine learning methods for image classification",
+        query=query,
         tokenizer=tokenizer,
         model=model,
         index=index,
         top_k=5,
     )
 
-    # Пошук із фільтром за роком
+    # 2. Пошук за конкретним роком
     semantic_search(
-        query="machine learning methods for image classification",
+        query=query,
         tokenizer=tokenizer,
         model=model,
         index=index,
@@ -147,14 +161,35 @@ def main():
         year=2020,
     )
 
-    # Пошук із фільтром за категорією
+    # 3. Пошук за категорією
     semantic_search(
-        query="machine learning methods for image classification",
+        query=query,
         tokenizer=tokenizer,
         model=model,
         index=index,
         top_k=5,
         category="cs.CV",
+    )
+
+    # 4. Новіші статті з Machine Learning
+    semantic_search(
+        query=query,
+        tokenizer=tokenizer,
+        model=model,
+        index=index,
+        top_k=5,
+        category="cs.LG",
+        year_from=2020,
+    )
+
+    # 5. Статті, опубліковані до 2015 року
+    semantic_search(
+        query=query,
+        tokenizer=tokenizer,
+        model=model,
+        index=index,
+        top_k=5,
+        year_before=2015,
     )
 
 
