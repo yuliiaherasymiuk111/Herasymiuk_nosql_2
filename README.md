@@ -410,6 +410,121 @@ Cosine similarity обчислюється як скалярний добуто�
 
 Для такої системи важливо оцінювати не тільки якість пошуку, а й швидкість, стабільність та витрати.
 
+## Приклади результатів виконання
+
+### Експеримент із chunking - `05_chunking.py`
+
+Після запуску скрипта отримала такі результати:
+
+```text
+Статей для експерименту: 30
+Середня довжина анотації: 1945 символів
+Пристрій: cpu
+
+Стратегія: chunks-fixed
+Кількість чанків: 116
+
+Стратегія: chunks-semantic
+Кількість чанків: 112
+
+Експеримент завершено!
+Результатів пошуку: 30
+
+Перевірка Pinecone:
+dimension=768
+total_vector_count=8228
+metric='cosine'
+namespaces=3
+```
+
+Цей результат підтверджує, що обидві стратегії були виконані, чанки завантажені в Pinecone, а пошукові запити повернули результати.
+
+### Порівняння метрик - `06_compare_metrics.py`
+
+Для експерименту я використала 8000 статей із нормалізованими ембеддингами розмірністю 768.
+
+Як тестову взяла статтю:
+
+*Calculation of prompt diphoton production cross sections at Tevatron and LHC energies*
+
+Порівняла Cosine Similarity, Dot Product та L2 Distance.
+
+Результати для п'яти найближчих статей:
+
+| ID статті | Cosine | Dot Product | L2 Distance |
+|---|---:|---:|---:|
+| 1301.0055 | 0.895140 | 0.895139 | 0.457953 |
+| 1001.0221 | 0.892812 | 0.892812 | 0.463009 |
+| 0801.0303 | 0.891984 | 0.891984 | 0.464792 |
+| 0801.0415 | 0.891372 | 0.891372 | 0.466108 |
+| 1801.00790 | 0.888219 | 0.888219 | 0.472823 |
+
+Приклад виводу програми:
+
+```text
+Завантажено статей: 8000
+Форма ембеддингів: (8000, 768)
+Середня норма векторів: 1.000000
+
+--- Порівняння ---
+Cosine і Dot Product - однаковий топ-5: True
+Cosine і L2 - однаковий топ-5: True
+```
+
+У результаті всі три метрики повернули однакові статті в однаковому порядку
+
+### Семантичний пошук - `04_search.py`
+
+Для перевірки семантичного пошуку я використала запит:
+
+`machine learning methods for image classification`
+
+Перевірила три варіанти: без фільтрів, із фільтром за 2020 роком та з фільтром за категорією `cs.CV`.
+
+**1. Пошук без фільтрів**
+
+| № | Назва статті | Рік | Similarity |
+|---|---|---:|---:|
+| 1 | A Novel Approach using CapsNet and Deep Belief Network for Detection and Identification of Oral Leukopenia | 2025 | 0.8730 |
+| 2 | Deep Learning Applications for Lung Cancer Diagnosis: A systematic review | 2022 | 0.8549 |
+| 3 | Evaluation of Predictive Data Mining Algorithms in Erythemato-Squamous Disease Diagnosis | 2015 | 0.8520 |
+| 4 | Butterfly Detection and Classification Based on Integrated YOLO Algorithm | 2020 | 0.8505 |
+| 5 | Learning audio and image representations with bio-inspired trainable feature extractors | 2018 | 0.8482 |
+
+**2. Пошук із фільтром `year = 2020`**
+
+| № | Назва статті | Similarity |
+|---|---|---:|
+| 1 | Butterfly Detection and Classification Based on Integrated YOLO Algorithm | 0.8505 |
+| 2 | Histogram Layers for Texture Analysis | 0.8287 |
+| 3 | Handwritten Optical Character Recognition (OCR): A Comprehensive Systematic Literature Review (SLR) | 0.8280 |
+| 4 | Inter- and Intra-domain Knowledge Transfer for Related Tasks in Deep Character Recognition | 0.8266 |
+| 5 | Residual Block-based Multi-Label Classification and Localization Network with Integral Regression for Vertebrae Labeling | 0.8223 |
+
+Усі знайдені статті були опубліковані у 2020 році, тому фільтр спрацював правильно.
+
+**3. Пошук із фільтром `category = cs.CV`**
+
+| № | Назва статті | Similarity |
+|---|---|---:|
+| 1 | Butterfly Detection and Classification Based on Integrated YOLO Algorithm | 0.8505 |
+| 2 | Learning audio and image representations with bio-inspired trainable feature extractors | 0.8482 |
+| 3 | Brain Tumor Detection and Classification based on Hybrid Ensemble Classifier | 0.8473 |
+| 4 | Denoising Adversarial Autoencoders: Classifying Skin Lesions Using Limited Labelled Training Data | 0.8435 |
+| 5 | Improved Neural Network based Plant Diseases Identification | 0.8401 |
+
+Усі результати належать до категорії `cs.CV`, тобто Computer Vision.
+
+**Мій висновок**
+
+Пошук без фільтрів повертає статті з різних років і категорій. Якщо додати фільтр, результати стають більш конкретними.
+
+Мені сподобалося, що можна одночасно шукати статті за змістом і обмежувати результати потрібними метаданими.
+
+При цьому я помітила, що не всі знайдені статті однаково точно відповідають запиту. Наприклад, частина результатів стосується медичної діагностики, хоча я шукала методи класифікації зображень.
+
+Тому для оцінювання якості пошуку важливо дивитися не тільки на similarity score, а й на сам зміст знайдених статей.
+
 ## 8. Висновки
 
 Під час виконання цієї домашньої роботи я навчилася працювати з векторною базою даних Pinecone та створювати систему семантичного пошуку.
