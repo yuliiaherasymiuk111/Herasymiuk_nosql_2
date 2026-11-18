@@ -1,0 +1,13 @@
+
+pandas
+pyarrow
+numpy
+python-dotenv
+tqdm
+torch
+transformers
+sentence-transformers
+adapters
+pinecone
+scikit-learn
+rank-bm25
